@@ -17,10 +17,16 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"encoding/json"
+	"fmt"
+	"regexp"
+
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// ComponentState is the administrator's intent for one component.
+// ComponentState represents the controller's desired state in component status.
 // +kubebuilder:validation:Enum=Enabled;Disabled
 type ComponentState string
 
@@ -49,14 +55,92 @@ var AllComponentKeys = []string{
 
 // ComponentSpec configures one component.
 type ComponentSpec struct {
-	// Enabled runs the operator. Disabled removes its manager and managed
-	// installation resources; existing agents, configuration, and native resources
-	// can remain. Complete active maintenance or remediation before disabling.
-	// Default: Disabled.
-	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="State",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:select:Disabled","urn:alm:descriptor:com.tectonic.ui:select:Enabled"}
-	// +kubebuilder:default=Disabled
+	// Enabled runs the operator when true. The default is false.
+	// Disabling removes its manager and managed installation resources.
+	// Existing agents, configuration, and native resources can remain.
+	// Complete active maintenance or remediation before disabling.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Enabled",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"},order=1
+	// +kubebuilder:default=false
 	// +optional
-	State ComponentState `json:"state,omitempty"`
+	Enabled bool `json:"enabled"`
+	// Manager configures the component's manager container.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Manager",order=2
+	// +optional
+	Manager *ManagerSpec `json:"manager,omitempty"`
+}
+
+// ManagerSpec configures the component's manager container.
+type ManagerSpec struct {
+	// Resources sets CPU and memory for the manager container only.
+	// Omitted values retain the packaged defaults. Settings do not enable the component.
+	// WAO checks effective values when the component is enabled.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Manager Resources",order=2
+	// +optional
+	Resources *ManagerResources `json:"resources,omitempty"`
+}
+
+// ManagerResources sets manager CPU and memory requests and limits.
+type ManagerResources struct {
+	// Requests sets the minimum CPU and memory for the manager container.
+	// +optional
+	Requests *CPUMemory `json:"requests,omitempty"`
+	// Limits sets the maximum CPU and memory for the manager container.
+	// +optional
+	Limits *CPUMemory `json:"limits,omitempty"`
+}
+
+// CPUMemory holds a CPU and a memory quantity.
+type CPUMemory struct {
+	// CPU is a Kubernetes quantity, for example 100m or 1.
+	// +optional
+	CPU *Quantity `json:"cpu,omitempty"`
+	// Memory is a Kubernetes quantity, for example 128Mi or 1Gi.
+	// +optional
+	Memory *Quantity `json:"memory,omitempty"`
+}
+
+// Quantity is a Kubernetes resource quantity written as a JSON integer or string.
+// The schema uses type string without anyOf so the console renders a text field.
+// The guard rejects exponents of four or more digits before isQuantity runs,
+// because ParseQuantity can stall on very large exponents.
+// +kubebuilder:validation:Type=string
+// +kubebuilder:validation:Format=int-or-string
+// +kubebuilder:validation:XIntOrString
+// +kubebuilder:validation:MaxLength=32
+// +kubebuilder:validation:XValidation:rule="!string(self).matches('[eE][-+]?[0-9]{4,}') && isQuantity(string(self))",message="must be a Kubernetes quantity such as 500m, 1 or 256Mi, with an exponent of at most three digits"
+type Quantity string
+
+// UnmarshalJSON accepts a JSON integer or string. Admission permits both forms.
+func (q *Quantity) UnmarshalJSON(data []byte) error {
+	if len(data) > 0 && data[0] == '"' {
+		var s string
+		if err := json.Unmarshal(data, &s); err != nil {
+			return err
+		}
+		*q = Quantity(s)
+		return nil
+	}
+	var n json.Number
+	if err := json.Unmarshal(data, &n); err != nil {
+		return fmt.Errorf("quantity must be a JSON integer or string: %w", err)
+	}
+	*q = Quantity(n)
+	return nil
+}
+
+// longExponent matches the exponents the CEL guard rejects.
+var longExponent = regexp.MustCompile(`[eE][-+]?[0-9]{4,}`)
+
+// Parse checks the value with the admission rule before calling ParseQuantity.
+func (q Quantity) Parse() (resource.Quantity, error) {
+	if longExponent.MatchString(string(q)) {
+		return resource.Quantity{}, fmt.Errorf("quantity %q has an exponent longer than three digits", string(q))
+	}
+	parsed, err := resource.ParseQuantity(string(q))
+	if err != nil {
+		return resource.Quantity{}, fmt.Errorf("quantity %q: %w", string(q), err)
+	}
+	return parsed, nil
 }
 
 // ComponentsSpec holds per-component intent. Every component defaults to Disabled.
@@ -108,30 +192,72 @@ type WorkloadAvailabilityConfigSpec struct {
 	Components ComponentsSpec `json:"components,omitempty"`
 }
 
-// StateOf returns the effective state for a component key; unknown keys and
-// unset entries are Disabled.
+// StateOf returns the effective state for a component key.
+// Unknown keys and unset entries are Disabled.
 func (s *WorkloadAvailabilityConfigSpec) StateOf(key string) ComponentState {
-	var c ComponentSpec
-	switch key {
-	case ComponentKeyNodeHealthCheck:
-		c = s.Components.NodeHealthCheck
-	case ComponentKeySelfNodeRemediation:
-		c = s.Components.SelfNodeRemediation
-	case ComponentKeyStorageBasedRemediation:
-		c = s.Components.StorageBasedRemediation
-	case ComponentKeyNodeMaintenance:
-		c = s.Components.NodeMaintenance
-	case ComponentKeyFenceAgentsRemediation:
-		c = s.Components.FenceAgentsRemediation
-	case ComponentKeyMachineDeletionRemediation:
-		c = s.Components.MachineDeletionRemediation
-	default:
-		return ComponentStateDisabled
-	}
-	if c.State == ComponentStateEnabled {
+	c, ok := s.componentOf(key)
+	if ok && c.Enabled {
 		return ComponentStateEnabled
 	}
 	return ComponentStateDisabled
+}
+
+// ManagerResourcesOf converts the configured manager resources to ResourceRequirements.
+// Unknown keys and omitted resources return nil. Errors name the field, such as limits.memory.
+func (s *WorkloadAvailabilityConfigSpec) ManagerResourcesOf(key string) (*corev1.ResourceRequirements, error) {
+	c, ok := s.componentOf(key)
+	if !ok || c.Manager == nil || c.Manager.Resources == nil {
+		return nil, nil
+	}
+	out := &corev1.ResourceRequirements{}
+	for _, field := range []struct {
+		name   string
+		values *CPUMemory
+		target *corev1.ResourceList
+	}{
+		{"requests", c.Manager.Resources.Requests, &out.Requests},
+		{"limits", c.Manager.Resources.Limits, &out.Limits},
+	} {
+		if field.values == nil {
+			continue
+		}
+		*field.target = corev1.ResourceList{}
+		for _, entry := range []struct {
+			name  corev1.ResourceName
+			value *Quantity
+		}{
+			{corev1.ResourceCPU, field.values.CPU}, {corev1.ResourceMemory, field.values.Memory},
+		} {
+			if entry.value == nil {
+				continue
+			}
+			parsed, err := entry.value.Parse()
+			if err != nil {
+				return nil, fmt.Errorf("%s.%s: %w", field.name, entry.name, err)
+			}
+			(*field.target)[entry.name] = parsed
+		}
+	}
+	return out, nil
+}
+
+func (s *WorkloadAvailabilityConfigSpec) componentOf(key string) (ComponentSpec, bool) {
+	switch key {
+	case ComponentKeyNodeHealthCheck:
+		return s.Components.NodeHealthCheck, true
+	case ComponentKeySelfNodeRemediation:
+		return s.Components.SelfNodeRemediation, true
+	case ComponentKeyStorageBasedRemediation:
+		return s.Components.StorageBasedRemediation, true
+	case ComponentKeyNodeMaintenance:
+		return s.Components.NodeMaintenance, true
+	case ComponentKeyFenceAgentsRemediation:
+		return s.Components.FenceAgentsRemediation, true
+	case ComponentKeyMachineDeletionRemediation:
+		return s.Components.MachineDeletionRemediation, true
+	default:
+		return ComponentSpec{}, false
+	}
 }
 
 // ComponentPhase summarizes one component's observed lifecycle state.

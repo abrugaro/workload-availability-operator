@@ -69,51 +69,261 @@ spec:
                       Runs the Fence Agents Remediation operator. Fencing requires separately
                       configured remediation resources and fence-agent credentials.
                     properties:
-                      state:
-                        default: Disabled
+                      enabled:
+                        default: false
                         description: |-
-                          Enabled runs the operator. Disabled removes its manager and managed
-                          installation resources; existing agents, configuration, and native resources
-                          can remain. Complete active maintenance or remediation before disabling.
-                          Default: Disabled.
-                        enum:
-                        - Enabled
-                        - Disabled
-                        type: string
+                          Enabled runs the operator when true. The default is false.
+                          Disabling removes its manager and managed installation resources.
+                          Existing agents, configuration, and native resources can remain.
+                          Complete active maintenance or remediation before disabling.
+                        type: boolean
+                      manager:
+                        description: Manager configures the component's manager container.
+                        properties:
+                          resources:
+                            description: |-
+                              Resources sets CPU and memory for the manager container only.
+                              Omitted values retain the packaged defaults. Settings do not enable the component.
+                              WAO checks effective values when the component is enabled.
+                            properties:
+                              limits:
+                                description: Limits sets the maximum CPU and memory
+                                  for the manager container.
+                                properties:
+                                  cpu:
+                                    description: CPU is a Kubernetes quantity, for
+                                      example 100m or 1.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                  memory:
+                                    description: Memory is a Kubernetes quantity,
+                                      for example 128Mi or 1Gi.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                type: object
+                              requests:
+                                description: Requests sets the minimum CPU and memory
+                                  for the manager container.
+                                properties:
+                                  cpu:
+                                    description: CPU is a Kubernetes quantity, for
+                                      example 100m or 1.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                  memory:
+                                    description: Memory is a Kubernetes quantity,
+                                      for example 128Mi or 1Gi.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                type: object
+                            type: object
+                        type: object
                     type: object
                   machineDeletionRemediation:
                     description: |-
                       Runs the Machine Deletion Remediation operator. Machine deletion requires
                       a separate remediation request.
                     properties:
-                      state:
-                        default: Disabled
+                      enabled:
+                        default: false
                         description: |-
-                          Enabled runs the operator. Disabled removes its manager and managed
-                          installation resources; existing agents, configuration, and native resources
-                          can remain. Complete active maintenance or remediation before disabling.
-                          Default: Disabled.
-                        enum:
-                        - Enabled
-                        - Disabled
-                        type: string
+                          Enabled runs the operator when true. The default is false.
+                          Disabling removes its manager and managed installation resources.
+                          Existing agents, configuration, and native resources can remain.
+                          Complete active maintenance or remediation before disabling.
+                        type: boolean
+                      manager:
+                        description: Manager configures the component's manager container.
+                        properties:
+                          resources:
+                            description: |-
+                              Resources sets CPU and memory for the manager container only.
+                              Omitted values retain the packaged defaults. Settings do not enable the component.
+                              WAO checks effective values when the component is enabled.
+                            properties:
+                              limits:
+                                description: Limits sets the maximum CPU and memory
+                                  for the manager container.
+                                properties:
+                                  cpu:
+                                    description: CPU is a Kubernetes quantity, for
+                                      example 100m or 1.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                  memory:
+                                    description: Memory is a Kubernetes quantity,
+                                      for example 128Mi or 1Gi.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                type: object
+                              requests:
+                                description: Requests sets the minimum CPU and memory
+                                  for the manager container.
+                                properties:
+                                  cpu:
+                                    description: CPU is a Kubernetes quantity, for
+                                      example 100m or 1.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                  memory:
+                                    description: Memory is a Kubernetes quantity,
+                                      for example 128Mi or 1Gi.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                type: object
+                            type: object
+                        type: object
                     type: object
                   nodeHealthCheck:
                     description: |-
                       Runs the Node Health Check operator. Configure a NodeHealthCheck policy
                       separately to enable automated health monitoring and remediation.
                     properties:
-                      state:
-                        default: Disabled
+                      enabled:
+                        default: false
                         description: |-
-                          Enabled runs the operator. Disabled removes its manager and managed
-                          installation resources; existing agents, configuration, and native resources
-                          can remain. Complete active maintenance or remediation before disabling.
-                          Default: Disabled.
-                        enum:
-                        - Enabled
-                        - Disabled
-                        type: string
+                          Enabled runs the operator when true. The default is false.
+                          Disabling removes its manager and managed installation resources.
+                          Existing agents, configuration, and native resources can remain.
+                          Complete active maintenance or remediation before disabling.
+                        type: boolean
+                      manager:
+                        description: Manager configures the component's manager container.
+                        properties:
+                          resources:
+                            description: |-
+                              Resources sets CPU and memory for the manager container only.
+                              Omitted values retain the packaged defaults. Settings do not enable the component.
+                              WAO checks effective values when the component is enabled.
+                            properties:
+                              limits:
+                                description: Limits sets the maximum CPU and memory
+                                  for the manager container.
+                                properties:
+                                  cpu:
+                                    description: CPU is a Kubernetes quantity, for
+                                      example 100m or 1.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                  memory:
+                                    description: Memory is a Kubernetes quantity,
+                                      for example 128Mi or 1Gi.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                type: object
+                              requests:
+                                description: Requests sets the minimum CPU and memory
+                                  for the manager container.
+                                properties:
+                                  cpu:
+                                    description: CPU is a Kubernetes quantity, for
+                                      example 100m or 1.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                  memory:
+                                    description: Memory is a Kubernetes quantity,
+                                      for example 128Mi or 1Gi.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                type: object
+                            type: object
+                        type: object
                     type: object
                   nodeMaintenance:
                     description: |-
@@ -121,17 +331,87 @@ spec:
                       separately requests node cordoning and draining. Complete active maintenance
                       before disabling; stopping the manager does not uncordon a node.
                     properties:
-                      state:
-                        default: Disabled
+                      enabled:
+                        default: false
                         description: |-
-                          Enabled runs the operator. Disabled removes its manager and managed
-                          installation resources; existing agents, configuration, and native resources
-                          can remain. Complete active maintenance or remediation before disabling.
-                          Default: Disabled.
-                        enum:
-                        - Enabled
-                        - Disabled
-                        type: string
+                          Enabled runs the operator when true. The default is false.
+                          Disabling removes its manager and managed installation resources.
+                          Existing agents, configuration, and native resources can remain.
+                          Complete active maintenance or remediation before disabling.
+                        type: boolean
+                      manager:
+                        description: Manager configures the component's manager container.
+                        properties:
+                          resources:
+                            description: |-
+                              Resources sets CPU and memory for the manager container only.
+                              Omitted values retain the packaged defaults. Settings do not enable the component.
+                              WAO checks effective values when the component is enabled.
+                            properties:
+                              limits:
+                                description: Limits sets the maximum CPU and memory
+                                  for the manager container.
+                                properties:
+                                  cpu:
+                                    description: CPU is a Kubernetes quantity, for
+                                      example 100m or 1.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                  memory:
+                                    description: Memory is a Kubernetes quantity,
+                                      for example 128Mi or 1Gi.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                type: object
+                              requests:
+                                description: Requests sets the minimum CPU and memory
+                                  for the manager container.
+                                properties:
+                                  cpu:
+                                    description: CPU is a Kubernetes quantity, for
+                                      example 100m or 1.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                  memory:
+                                    description: Memory is a Kubernetes quantity,
+                                      for example 128Mi or 1Gi.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                type: object
+                            type: object
+                        type: object
                     type: object
                   selfNodeRemediation:
                     description: |-
@@ -139,17 +419,87 @@ spec:
                       its default configuration and starts privileged node agents on eligible
                       nodes. Disabling does not remove existing node agents or their configuration.
                     properties:
-                      state:
-                        default: Disabled
+                      enabled:
+                        default: false
                         description: |-
-                          Enabled runs the operator. Disabled removes its manager and managed
-                          installation resources; existing agents, configuration, and native resources
-                          can remain. Complete active maintenance or remediation before disabling.
-                          Default: Disabled.
-                        enum:
-                        - Enabled
-                        - Disabled
-                        type: string
+                          Enabled runs the operator when true. The default is false.
+                          Disabling removes its manager and managed installation resources.
+                          Existing agents, configuration, and native resources can remain.
+                          Complete active maintenance or remediation before disabling.
+                        type: boolean
+                      manager:
+                        description: Manager configures the component's manager container.
+                        properties:
+                          resources:
+                            description: |-
+                              Resources sets CPU and memory for the manager container only.
+                              Omitted values retain the packaged defaults. Settings do not enable the component.
+                              WAO checks effective values when the component is enabled.
+                            properties:
+                              limits:
+                                description: Limits sets the maximum CPU and memory
+                                  for the manager container.
+                                properties:
+                                  cpu:
+                                    description: CPU is a Kubernetes quantity, for
+                                      example 100m or 1.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                  memory:
+                                    description: Memory is a Kubernetes quantity,
+                                      for example 128Mi or 1Gi.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                type: object
+                              requests:
+                                description: Requests sets the minimum CPU and memory
+                                  for the manager container.
+                                properties:
+                                  cpu:
+                                    description: CPU is a Kubernetes quantity, for
+                                      example 100m or 1.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                  memory:
+                                    description: Memory is a Kubernetes quantity,
+                                      for example 128Mi or 1Gi.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                type: object
+                            type: object
+                        type: object
                     type: object
                   storageBasedRemediation:
                     description: |-
@@ -158,17 +508,87 @@ spec:
                       storage-based fencing. Existing agents and storage configuration can remain
                       after disabling.
                     properties:
-                      state:
-                        default: Disabled
+                      enabled:
+                        default: false
                         description: |-
-                          Enabled runs the operator. Disabled removes its manager and managed
-                          installation resources; existing agents, configuration, and native resources
-                          can remain. Complete active maintenance or remediation before disabling.
-                          Default: Disabled.
-                        enum:
-                        - Enabled
-                        - Disabled
-                        type: string
+                          Enabled runs the operator when true. The default is false.
+                          Disabling removes its manager and managed installation resources.
+                          Existing agents, configuration, and native resources can remain.
+                          Complete active maintenance or remediation before disabling.
+                        type: boolean
+                      manager:
+                        description: Manager configures the component's manager container.
+                        properties:
+                          resources:
+                            description: |-
+                              Resources sets CPU and memory for the manager container only.
+                              Omitted values retain the packaged defaults. Settings do not enable the component.
+                              WAO checks effective values when the component is enabled.
+                            properties:
+                              limits:
+                                description: Limits sets the maximum CPU and memory
+                                  for the manager container.
+                                properties:
+                                  cpu:
+                                    description: CPU is a Kubernetes quantity, for
+                                      example 100m or 1.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                  memory:
+                                    description: Memory is a Kubernetes quantity,
+                                      for example 128Mi or 1Gi.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                type: object
+                              requests:
+                                description: Requests sets the minimum CPU and memory
+                                  for the manager container.
+                                properties:
+                                  cpu:
+                                    description: CPU is a Kubernetes quantity, for
+                                      example 100m or 1.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                  memory:
+                                    description: Memory is a Kubernetes quantity,
+                                      for example 128Mi or 1Gi.
+                                    format: int-or-string
+                                    maxLength: 32
+                                    type: string
+                                    x-kubernetes-int-or-string: true
+                                    x-kubernetes-validations:
+                                    - message: must be a Kubernetes quantity such
+                                        as 500m, 1 or 256Mi, with an exponent of at
+                                        most three digits
+                                      rule: '!string(self).matches(''[eE][-+]?[0-9]{4,}'')
+                                        && isQuantity(string(self))'
+                                type: object
+                            type: object
+                        type: object
                     type: object
                 type: object
             type: object
@@ -204,8 +624,8 @@ spec:
                         type: object
                       type: array
                     desiredState:
-                      description: ComponentState is the administrator's intent for
-                        one component.
+                      description: ComponentState represents the controller's desired
+                        state in component status.
                       enum:
                       - Enabled
                       - Disabled
