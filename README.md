@@ -1,13 +1,11 @@
-# wao_poc — Workload Availability Operator proof of concept
+# WAO — Workload Availability Operator
 
-This repository is a **proof of concept** for consolidating the
-[medik8s](https://github.com/medik8s) node remediation operators behind a single
-operator, the Workload Availability Operator (WAO).
+The Workload Availability Operator (WAO) is a single operator that consolidates the [medik8s](https://github.com/medik8s) operators and deploys them as managed operands.
 
 Start with the [overview and first trial](docs/Overview.md) for the design,
 key decisions, and a guided installation.
 
-The POC installs all six upstream components as managed operands:
+WAO installs all six upstream components as managed operands:
 
 | Component | What it does |
 | --- | --- |
